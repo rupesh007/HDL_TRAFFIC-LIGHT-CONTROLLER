@@ -1,0 +1,79 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+use IEEE.STD_LOGIC_ARITH.all;
+use IEEE.STD_LOGIC_UNSIGNED.all;
+
+entity timer is 
+	port (
+		clk, reset, t_en, tblink : in std_logic;
+		timer_in : in std_logic_vector (1 downto 0);
+		hw_sensor,fr_sensor : in std_logic_vector (1 downto 0);
+		delay_notify: out std_logic;
+		blank_out: out std_logic;
+		timer_out : out std_logic_vector (5 downto 0)		
+	);
+	
+end timer;
+
+
+architecture Timing of timer is 
+--required signals declaration
+signal ticks: std_logic_vector (5 downto 0):="000000";
+signal blank_temp : std_logic:='0';
+
+
+
+BEGIN
+
+PROCESS (clk) begin
+	if rising_edge(clk) then 
+		if (t_en = '1') then 
+			ticks <= ticks + '1';
+			if (timer_in = "00") then 
+				if (ticks = "111011") then 
+					delay_notify <= '1';
+					ticks <= "000000";
+					timer_out <="000000";		--this is just to verify the timing output
+				else delay_notify <= '0';
+				end if;
+				
+			elsif (timer_in = "01") then 	
+				if (ticks >="001001") then 	--at least 5 sec 
+					if (hw_sensor(0)='1' or hw_sensor(1)='1') then  --checks if vehicle in the highway
+						delay_notify <= '1';
+						ticks <= "000000";
+						timer_out <="000000";
+					elsif(ticks="010011") then	-- 10 sec delay if no vehicle in highway
+						delay_notify <= '1';
+						ticks <= "000000";
+						timer_out <="000000";	
+					else delay_notify <='0';
+					end if;
+				else delay_notify <= '0';
+				end if;
+				
+			elsif (timer_in="10") then 
+				if (ticks = "000011") then -- 2 sec delay
+					delay_notify <= '1';
+					ticks <= "000000";
+					timer_out <= "000000";
+				else delay_notify <= '0';
+				end if;
+			
+			else 
+				if 	(tblink = '1') then 
+					delay_notify <= '0';
+					blank_temp <= not blank_temp;
+					blank_out <= blank_temp;
+					
+				else 
+				    	delay_notify <= '1';
+					ticks <= "000000";
+					timer_out <= "000000";
+			
+				end if;
+			end if;		
+		end if;	
+	end if;
+END PROCESS;
+END Timing;
