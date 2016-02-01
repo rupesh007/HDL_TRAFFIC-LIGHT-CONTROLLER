@@ -1,0 +1,56 @@
+library IEEE;
+use IEEE.STD_LOGIC_1164.all;
+use IEEE.STD_LOGIC_ARITH.all;
+use IEEE.STD_LOGIC_UNSIGNED.all;
+
+entity Top is 
+end Top;
+
+architecture TB of Top is
+
+signal clk, reset, blink: std_logic:='0';
+signal hws, frs: std_logic_vector (1 downto 0):="00";
+
+	component traffic is 
+		port (
+			clk, reset, cblink : in std_logic;     		--input for the traffic light controller 
+			hws, frs: in std_logic_vector (1 downto 0) --sensors input
+		);
+	end component;
+
+begin
+
+Top_port: traffic port map (clk,reset,blink,hws,frs);
+
+
+clock_generation: process begin
+	clk <= not clk;
+	wait for 10 ns;
+end process;
+
+general: process begin
+  reset <= '1';
+  wait for 20 ns;
+  reset <= '0';
+  hws <= "00";
+  frs <="00";
+  wait for 100 ns;
+  
+  blink <= '1';
+  wait for 500 ns;
+  blink <= '0';
+  wait for 1200 ns;
+  hws <= "01";
+  wait for 500 ns;
+  hws <= "10";
+  wait for 500 ns;
+  hws <= "00";
+  wait for 500 ns;
+  frs <= "01";
+  wait for 500 ns;
+  frs <= "10";
+  wait for 500 ns;
+ end process;
+ 
+ end TB;
+  
